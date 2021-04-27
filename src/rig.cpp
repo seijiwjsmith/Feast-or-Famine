@@ -5,8 +5,9 @@
 Transform parent(Transform parent, Motion child_motion, Motion root_motion);
 void animate_rig_fk_helper(entt::entity character, float elapsed_ms);
 
-
-//create a simple entity that takes part in kinematic chain
+/*
+    create a simple entity that takes part in kinematic chain
+*/
 entt::entity Rig::createPart(entt::entity root_entity, std::string name, vec2 offset, vec2 origin, float angle, vec2 scale)
 {
     auto entity = registry.create();
@@ -38,6 +39,10 @@ entt::entity Rig::createPart(entt::entity root_entity, std::string name, vec2 of
 }
 
 
+/*
+    Creates a textured quad that is used by the rig for rendering. 
+    This is part of a work around that works within the existing rendering and geometry pipelines.
+*/
 entt::entity Rig::createPartTextured(entt::entity rigPart, std::string name, vec2 offset, float angle, vec2 scale, int layer)
 {
     auto entity = registry.create();
@@ -69,7 +74,10 @@ entt::entity Rig::createPartTextured(entt::entity rigPart, std::string name, vec
     return entity;
 }
 
-//updates transforms after updating angles
+
+/*
+    updates transforms after updating angles. 
+*/
 void RigSystem::update_rig(entt::entity character) {
     auto& rig = registry.get<Rig>(character);
     auto& root_motion = registry.get<Motion>(character);
@@ -161,6 +169,7 @@ void animate_rig_fk_helper(entt::entity character, float elapsed_ms) {
 }
 
 
+
 void RigSystem::animate_rig_ik(entt::entity character, float elapsed_ms) {
     if (!registry.has<IK_Animations>(character)) {
         return;
@@ -208,9 +217,8 @@ void RigSystem::animate_rig_ik(entt::entity character, float elapsed_ms) {
 
 
 /*
-    IK solver
+    IK solver -- a variation of cyclic coordinate descent
 */
-
 void RigSystem::ik_solve(entt::entity character, vec2 goal, int chain_idx) {
     auto& rig = registry.get<Rig>(character);
     auto& root_motion = registry.get<Motion>(character);
@@ -263,12 +271,10 @@ void RigSystem::ik_solve(entt::entity character, vec2 goal, int chain_idx) {
 /*
     helpers
 */
-    
 
 vec2 point_in_world_space(vec2 pos, Transform transform_part, Transform root_transform) { //end of part point
     return root_transform.mat * transform_part.mat * vec3(pos.x, pos.y, 1);
 }
-
 
 Transform parent(Transform parent, Motion child_motion, Motion root_motion) {
     Transform child;
