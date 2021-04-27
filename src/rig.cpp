@@ -20,7 +20,6 @@ entt::entity Rig::createPart(entt::entity root_entity, std::string name, vec2 of
     }
     ShadedMeshRef& mesh_ref = registry.emplace<ShadedMeshRef>(entity, resource);
     mesh_ref.layer = 0; 
-   // mesh_ref.show = false;
 
     auto& motion = registry.emplace<Motion>(entity);
     motion.angle = angle;
@@ -58,9 +57,8 @@ entt::entity Rig::createPartTextured(entt::entity rigPart, std::string name, vec
     auto& motion = registry.emplace<Motion>(entity);
     motion.angle = angle;
     motion.velocity = { 0, 0 };
-    motion.scale = scale; //resource.mesh.original_size * 
+    motion.scale = scale; 
     motion.position = offset;
-    //motion.scale.y *= -1;
     motion.boundingbox = motion.scale;
 
     auto& transform = registry.emplace<Transform>(entity);
@@ -125,8 +123,6 @@ void RigSystem::animate_rig_fk(entt::entity character, float elapsed_ms) {
     update_rig(character);
 }
 
-//TODO check if FK component exists
-//TODO: check corner cases of lower/upper bound
 void animate_rig_fk_helper(entt::entity character, float elapsed_ms) {
     if (!registry.has<FK_Animations>(character)) {
         return;
@@ -165,8 +161,6 @@ void animate_rig_fk_helper(entt::entity character, float elapsed_ms) {
 }
 
 
-//make a procedurally animated character. animation speed based on velocity.
-//able to take recoil from hits
 void RigSystem::animate_rig_ik(entt::entity character, float elapsed_ms) {
     if (!registry.has<IK_Animations>(character)) {
         return;
@@ -199,7 +193,7 @@ void RigSystem::animate_rig_ik(entt::entity character, float elapsed_ms) {
 
             if (a0 != a1) {
                 vec2 new_pos = mix(a0, a1, ratio); // linear interpolation
-                ik_solve(character, new_pos * root_motion.scale, i); // i == which chain. keyframe data has to manually align with chain #
+                ik_solve(character, new_pos * root_motion.scale, i);
             }
  
 
@@ -217,8 +211,6 @@ void RigSystem::animate_rig_ik(entt::entity character, float elapsed_ms) {
     IK solver
 */
 
-//TODO: optimize to converge faster but also have smooth behavior when moving between frames??
-//TODO: break down into two cases: out of reach and within reach
 void RigSystem::ik_solve(entt::entity character, vec2 goal, int chain_idx) {
     auto& rig = registry.get<Rig>(character);
     auto& root_motion = registry.get<Motion>(character);
