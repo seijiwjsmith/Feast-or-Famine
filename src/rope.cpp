@@ -1,19 +1,14 @@
 #include "rope.hpp"
 #include "rig.hpp"
 #include <iostream>
-#include "camera.hpp"
-
-/* Physics Based Animation
-Implement time stepping based physical simulation which can either serve as a background effects (e.g. water, 
-smoke implemented using particles) or as active game elements (throwing a ball, swinging a rope, etc.). 
-A subset of the game entities (main or background) should possess non-trivial physics properties 
-such as momentum (linear or angular) and acceleration, and act based on those.
-*/
 
 
 const std::string link_top = "monsters/dragon_rig/chain_top_small.png";
 const std::string link_side = "monsters/dragon_rig/chain_side_small.png";
 
+/*
+    Creates a certain length chain/rope given a particular attachment point.
+*/
 entt::entity RopeRig::createRope(entt::entity anchor, int length, vec2 offset) {
     auto entity = registry.create();
     auto& rope = registry.emplace<RopeRig>(entity);
@@ -34,6 +29,10 @@ entt::entity RopeRig::createRope(entt::entity anchor, int length, vec2 offset) {
     return entity;
 }
 
+
+/*
+    Creates the unit of the rope/chain.
+*/
 entt::entity RopeRig::createRopePart(vec2 pos, std::string name) {
     
     auto entity = registry.create();
@@ -65,18 +64,16 @@ entt::entity RopeRig::createRopePart(vec2 pos, std::string name) {
 }
 
 
+/*
+    Maintains the inter-chainlink distance and rotates the chainlink.
+    Energy is dissipated conveniently through the constraints, which shorten the chainlink distance
+    if it is longer than intended. 
+*/
 void update_helper(RopeRig ropeRig , vec2 anchor_pos) {
 
     //fix first chain link position -- 'anchor it'
     auto& link_motion = registry.get<Motion>(ropeRig.chain[0]);
     link_motion.position = anchor_pos;
-
-    
-    //fix first chain part to mouse
-    //auto& mouse = registry.get<MouseMovement>(camera).mouse_pos;
-    //auto link = ropeRig.chain[0];
-    //auto& link_motion = registry.get<Motion>(link);
-    //link_motion.position = mouse;
 
     for (int i = 0; i < ropeRig.chain.size() - 1; i++) {
         auto link0 = ropeRig.chain[i];
@@ -93,12 +90,8 @@ void update_helper(RopeRig ropeRig , vec2 anchor_pos) {
         float dif = abs(dist - 10.0f);
         link0_motion.position = link0_motion.position + dir * dif / 2.0f;
         link1_motion.position = link1_motion.position - dir * dif / 2.0f;
-        //link1_motion.position = link1_motion.position - dir * dif ;
 
         //update rotation
-        //float angle = atan(dir.y / dir.x);
-        //link1_motion.angle = angle;
-   
         vec2 y_axis = vec2(0, 1);
         float angle = acos(dot(dir, y_axis));
 
@@ -111,7 +104,10 @@ void update_helper(RopeRig ropeRig , vec2 anchor_pos) {
     }
 }
 
-
+/*
+    get worldspace coordinates of the 'anchor' point, or where the 
+    chain is attached.
+*/
 vec2 get_anchor_pos(RopeRig ropeRig) {
     auto& anchor_motion = registry.get<Motion>(ropeRig.anchor);
    
@@ -145,7 +141,11 @@ void RopeSystem::update_rig(entt::entity rope_rig) {
     }
 }
 
-//should apply drag/disspative forces, gravity, and angular and linear momentum D:
+
+/*
+    This function applies both gravity and assumes the prior step's 
+    velocity continues this step.
+*/
 void RopeSystem::update_physics(entt::entity rope_rig,float elapsed_ms) {
     float step_seconds = elapsed_ms / 1000.0f;
 
